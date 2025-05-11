@@ -318,11 +318,11 @@ const docRef = doc(db, "events", eventID);
 
       console.log("📡 Connexion à Firestore pour écoute en live...");
 onSnapshot(docRef, (docSnap) => {
-  const data = docSnap.data();
-  console.log("📡 SNAPSHOT actif", data.control, data.updatedAt);
-        const data = docSnap.data();
+  let snapData = docSnap.data();
+  console.log("📡 SNAPSHOT actif", snapData.control, snapData.updatedAt);
+        let snapData = docSnap.data();
         if (typeof data.control === "number" && data.control > currentIndex) {
-          showStep(data.control);
+          showStep(snapData.control);
         }
         
       });
