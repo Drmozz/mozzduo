@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Étapes du projet</title>
+  <style>
+    body {
+      background: #111;
+      color: white;
+      font-family: sans-serif;
+      padding: 20px;
+    }
+    .etape {
+      border: 1px solid #555;
+      padding: 15px;
+      margin-bottom: 15px;
+      background-color: #222;
+    }
+    img {
+      max-width: 100px;
+      margin-right: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>📋 Étapes du projet</h1>
+  <select id="projectSelect">
+    <option value="">-- Sélectionner un projet --</option>
+  </select>
+  <div id="step-counter" style="margin: 1em 0; font-weight: bold;"></div>
+  <div id="steps"></div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getFirestore, doc, getDoc, getDocs, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAO0LdsUQ05XRz3wLyTI6VD4r73qHKd11U",
+      authDomain: "mozzduo-f4988.firebaseapp.com",
+      projectId: "mozzduo-f4988",
+      storageBucket: "mozzduo-f4988.appspot.com",
+      messagingSenderId: "907165414498",
+      appId: "1:907165414498:web:950a1962b3bad8c7e14d3b"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const stepsContainer = document.getElementById("steps");
+    const counter = document.getElementById("step-counter");
+    const projectSelect = document.getElementById("projectSelect");
+
+    async function loadProjects() {
+      const snap = await getDocs(collection(db, "events"));
+      snap.forEach(docSnap => {
+        const opt = document.createElement("option");
+        opt.value = docSnap.id;
+        opt.textContent = docSnap.id;
+        projectSelect.appendChild(opt);
+      });
+    }
+
+    async function showSteps(eventID) {
+      const docRef = doc(db, "events", eventID);
+      const snap = await getDoc(docRef);
+      const steps = snap.data()?.steps || [];
+
+      counter.textContent = `Nombre d'étapes : ${steps.length}`;
+      stepsContainer.innerHTML = "";
+
+      steps.forEach((step, i) => {
+        const div = document.createElement("div");
+        div.className = "etape";
+        div.innerHTML = `
+          <h3>Étape ${i + 1}</h3>
+          ${step.imgA ? `<img src="${step.imgA}" alt="imgA">` : ""}
+          ${step.imgB ? `<img src="${step.imgB}" alt="imgB">` : ""}<br><br>
+          ${step.soundA ? `<p>🎧 Son A : <a href="${step.soundA}" target="_blank">${step.soundA.split('/').pop()}</a></p>` : ""}
+          ${step.soundB ? `<p>🎧 Son B : <a href="${step.soundB}" target="_blank">${step.soundB.split('/').pop()}</a></p>` : ""}
+          ${step.redirect ? `<p>🔗 Redirection : <a href="${step.redirect}" target="_blank">${step.redirect}</a></p>` : ""}
+        `;
+        stepsContainer.appendChild(div);
+      });
+    }
+
+    projectSelect.addEventListener("change", (e) => {
+      if (e.target.value) showSteps(e.target.value);
+    });
+
+    loadProjects();
+  </script>
+</body>
+</html>
