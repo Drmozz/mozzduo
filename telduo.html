@@ -319,7 +319,13 @@ window.selectSide = async (chosen) => {
         }
         
       });
-    };
+      // Listener pour test de déclenchement par raccourci
+      onSnapshot(doc(db, "events", eventID), (snap) => {
+        const data = snap.data();
+        console.log("🟢 Listener Raccourci actif : control =", data.control, "updatedAt =", data.updatedAt);
+      });
+
+};
 
     
     function showStep(index) {
