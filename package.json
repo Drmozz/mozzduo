@@ -1,0 +1,23 @@
+{
+  "name": "admin-mozzduo-git",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Drmozz/mozzduo.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Drmozz/mozzduo/issues"
+  },
+  "homepage": "https://github.com/Drmozz/mozzduo#readme",
+  "description": "",
+  "dependencies": {
+    "firebase-admin": "^13.3.0"
+  }
+}
