@@ -219,6 +219,7 @@ const urlProject = params.get("project");
     initDiv.style.display = "block";
 
     
+console.log("🟠 selectSide() appelée");
 window.selectSide = async (chosen) => {
   side = chosen;
   initDiv.style.display = "none";
@@ -250,7 +251,8 @@ window.selectSide = async (chosen) => {
   }
     };
 
-    window.start = async () => {
+    console.log("🟢 start() appelée");
+window.start = async () => {
       eventID = eventID || eventSelect.value;
       if (!eventID) return alert("Veuillez choisir un projet.");
 
@@ -270,10 +272,12 @@ window.selectSide = async (chosen) => {
       }
 
 
-      projectDiv.style.display = "none";
+      console.log("✅ Project div masqué, étape affichée");
+projectDiv.style.display = "none";
       stepDiv.style.display = "block";
 
-      const docRef = doc(db, "events", eventID);
+      console.log("📄 docRef défini pour eventID =", eventID);
+const docRef = doc(db, "events", eventID);
       const snap = await getDoc(docRef);
       const data = snap.data();
       steps = data?.steps || [];
@@ -312,10 +316,12 @@ window.selectSide = async (chosen) => {
 
       
 
-      onSnapshot(docRef, (docSnap) => {
+      console.log("📡 Connexion à Firestore pour écoute en live...");
+onSnapshot(docRef, (docSnap) => {
+  const data = docSnap.data();
+  console.log("📡 SNAPSHOT actif", data.control, data.updatedAt);
         const data = docSnap.data();
-        if (typeof data.control === "number" && data.control !== currentIndex) {
-          console.log("🔄 Nouvelle valeur de control détectée :", data.control);
+        if (typeof data.control === "number" && data.control > currentIndex) {
           showStep(data.control);
         }
         
@@ -376,7 +382,8 @@ window.selectSide = async (chosen) => {
       if (e.target.closest("#corner")) return; // ignorer les clics dans le coin
 
       if (!eventID) return;
-      const docRef = doc(db, "events", eventID);
+      console.log("📄 docRef défini pour eventID =", eventID);
+const docRef = doc(db, "events", eventID);
       const snap = await getDoc(docRef);
       const data = snap.data();
       steps = data?.steps || [];
@@ -392,7 +399,8 @@ window.selectSide = async (chosen) => {
       dot.style.display = "block";
       dot.style.background = "rgba(0,0,255,0.3)";
 
-      const docRef = doc(db, "events", eventID);
+      console.log("📄 docRef défini pour eventID =", eventID);
+const docRef = doc(db, "events", eventID);
       const snap = await getDoc(docRef);
       const latenceMs = snap.data()?.latenceMs || 3000;
 
