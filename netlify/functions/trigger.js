@@ -32,7 +32,8 @@ GhifcEz+wDpBFFAxKGpRrHKxI33C/TgOgOwI7hsCgYBc3DfTcVrsuOHUhkmyoncu
 fonh7qoCjx/r8jOKrMjrSc52rvLy88yVMMK6BefTI88VBnlKz8BptNNKb1easzQp
 HdFAM7mKYHozyTnpbrDkazBFqw9/AjTA33z0apqPnQAkg3u2ae5X5Iq9Tgy1R1vg
 aQ1iKfZwQlF/Ie072FbZ9g==
------END PRIVATE KEY-----\n`,
+-----END PRIVATE KEY-----
+`,
   client_email: "firebase-adminsdk-fbsvc@mozzduo-f4988.iam.gserviceaccount.com",
   client_id: "100351119301863718836",
   auth_uri: "https://accounts.google.com/o/oauth2/auth",
@@ -64,13 +65,12 @@ exports.handler = async function (event, context) {
   try {
     const ref = db.doc(`events/${eventID}`);
     await ref.update({
-      control: key,
-      updatedAt: Date.now()
+      trigger: key
     });
 
     return {
       statusCode: 200,
-      body: JSON.stringify({ success: true, event: eventID, control: key }),
+      body: JSON.stringify({ success: true, event: eventID, trigger: key }),
     };
   } catch (err) {
     return {
