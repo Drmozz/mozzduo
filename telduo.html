@@ -329,11 +329,16 @@ window.selectSide = async (chosen) => {
     };
 
     
+    
     function showStep(index) {
+      console.log("🎯 showStep appelé avec index =", index);
+      if (!steps.length || !steps[index]) {
+        console.warn("❌ Étape introuvable ou vide :", index, steps);
+        return;
+      }
+
       currentIndex = index;
       const step = steps[index];
-      if (!step) return;
-
       const img = document.getElementById("image");
       const video = document.getElementById("video");
 
@@ -347,8 +352,28 @@ window.selectSide = async (chosen) => {
         video.style.display = "block";
         video.className = isScroll ? "scroll-mode" : "fit-mode";
         video.load();
-        video.play().catch(e => console.warn("Lecture vidéo échouée", e));
+        video.play().catch(e => console.warn("🎥 Lecture vidéo échouée", e));
       } else {
+        video.style.display = "none";
+        img.src = mediaUrl || "";
+        img.style.display = "block";
+        img.className = isScroll ? "scroll-mode" : "fit-mode";
+      }
+
+      document.body.style.overflow = isScroll ? "auto" : "hidden";
+
+      const sound = bufferList[index];
+      if (sound) {
+        sound.play().catch(e => console.warn("🔈 Échec lecture audio", e));
+      }
+
+      if (index === steps.length - 1 && step.redirect) {
+        setTimeout(() => {
+          location.href = step.redirect;
+        }, 5000);
+      }
+    }
+ else {
         video.style.display = "none";
         if (preloadedImages[index]) img.src = preloadedImages[index].src;
         else img.src = mediaUrl || "";
