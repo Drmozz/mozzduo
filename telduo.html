@@ -324,6 +324,16 @@ window.selectSide = async (chosen) => {
         const data = snap.data();
         console.log("🟢 Listener Raccourci actif : control =", data.control, "updatedAt =", data.updatedAt);
       });
+      // 🧪 Listener TRIGGER pour raccourcis
+      let lastTrigger = null;
+      onSnapshot(doc(db, "events", eventID), (snap) => {
+        const data = snap.data();
+        if (data.trigger && data.trigger !== lastTrigger) {
+          lastTrigger = data.trigger;
+          console.log("⚡ Déclenchement via trigger détecté :", data.trigger);
+          updateDoc(doc(db, "events", eventID), { control: currentIndex + 1 });
+        }
+      });
 
 };
 
