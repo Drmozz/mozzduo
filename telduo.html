@@ -314,7 +314,8 @@ window.selectSide = async (chosen) => {
 
       onSnapshot(docRef, (docSnap) => {
         const data = docSnap.data();
-        if (typeof data.control === "number" && data.control > currentIndex) {
+        if (typeof data.control === "number" && data.control !== currentIndex) {
+          console.log("🔄 Nouvelle valeur de control détectée :", data.control);
           showStep(data.control);
         }
         
