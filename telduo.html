@@ -350,9 +350,9 @@ await updateDoc(doc(db, "events", eventID), { trigger: "0" });
             }, latenceAvantRouge);
           }
 
-          setTimeout(async () => {
+          setTimeout(() => {
             dot.style.display = "none";
-            await updateDoc(docRef, { control: currentIndex + 1 });
+            updateDoc(docRef, { control: currentIndex + 1 });
           }, latenceMs);
 
         }
