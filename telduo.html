@@ -332,7 +332,29 @@ await updateDoc(doc(db, "events", eventID), { trigger: "0" });
         if (data.trigger && data.trigger !== lastTrigger && data.trigger !== "0") {
           lastTrigger = data.trigger;
           console.log("⚡ Déclenchement via trigger détecté :", data.trigger);
-          updateDoc(doc(db, "events", eventID), { control: currentIndex + 1 });
+          
+          lastTrigger = data.trigger;
+          console.log("⚡ Déclenchement via trigger détecté :", data.trigger);
+          const dot = document.getElementById("dot");
+          dot.style.display = "block";
+          dot.style.background = "rgba(0,0,255,0.3)";
+
+          const docRef = doc(db, "events", eventID);
+          const snapData = await getDoc(docRef);
+          const latenceMs = snapData.data()?.latenceMs || 3000;
+
+          const latenceAvantRouge = latenceMs - 500;
+          if (latenceAvantRouge > 0) {
+            setTimeout(() => {
+              dot.style.background = "rgba(255,0,0,0.6)";
+            }, latenceAvantRouge);
+          }
+
+          setTimeout(async () => {
+            dot.style.display = "none";
+            await updateDoc(docRef, { control: currentIndex + 1 });
+          }, latenceMs);
+
         }
       });
 
