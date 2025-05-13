@@ -364,7 +364,6 @@ window.saveLatenceRouge = async function () {
       const val = parseInt(document.getElementById("latenceMs").value, 10);
       if (!currentEvent || isNaN(val)) {
         alert("Veuillez sélectionner un projet et entrer une valeur valide.");
-        return;
       }
       const ref = doc(db, "events", currentEvent);
       await updateDoc(ref, { latenceMs: val });
