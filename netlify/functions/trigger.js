@@ -64,13 +64,18 @@ exports.handler = async function (event, context) {
 
   try {
     const ref = db.doc(`events/${eventID}`);
+    const snap = await ref.get();
+    const data = snap.data();
+    const current = typeof data.control === "number" ? data.control : -1;
+
     await ref.update({
-      trigger: key
+      trigger: key,
+      control: current + 1
     });
 
     return {
       statusCode: 200,
-      body: JSON.stringify({ success: true, event: eventID, trigger: key }),
+      body: JSON.stringify({ success: true, event: eventID, trigger: key, newControl: current + 1 }),
     };
   } catch (err) {
     return {
