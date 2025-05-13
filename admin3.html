@@ -128,12 +128,10 @@ async function resizeImageWithDialog(file) {
       container.innerHTML = "";
       const docRef = doc(db, "events", eventId);
       const docSnap = await getDoc(docRef);
-      if (!docSnap.exists()) return;
       const data = docSnap.data();
       const steps = data.steps || [];
       if (steps.length === 0) {
         container.innerHTML = "<p>Aucune étape enregistrée pour ce projet.</p>";
-        return;
       }
       
   
@@ -171,14 +169,12 @@ async function resizeImageWithDialog(file) {
       editIndex = index;
       const docRef = doc(db, "events", currentEvent);
       const docSnap = await getDoc(docRef);
-      if (!docSnap.exists()) return;
       const step = docSnap.data().steps[index];
       document.getElementById("redirect").value = step.redirect || "";
           document.getElementById("scrollA").checked = !!step.scrollA;
           document.getElementById("scrollB").checked = !!step.scrollB;
       const setSelectByUrl = (selectId, url) => {
         const select = document.getElementById(selectId);
-        if (!select) return;
         [...select.options].forEach(opt => {
           if (opt.value === url) select.value = url;
         });
@@ -194,10 +190,8 @@ async function resizeImageWithDialog(file) {
   document.querySelectorAll(".delete-step").forEach(btn => {
     btn.addEventListener("click", async (e) => {
       const index = parseInt(e.target.dataset.index);
-      if (!confirm("Supprimer cette étape ?")) return;
       const docRef = doc(db, "events", currentEvent);
       const docSnap = await getDoc(docRef);
-      if (!docSnap.exists()) return;
       const data = docSnap.data();
       const steps = data.steps || [];
       steps.splice(index, 1);
@@ -210,10 +204,8 @@ async function resizeImageWithDialog(file) {
   document.querySelectorAll(".move-up").forEach(btn => {
     btn.addEventListener("click", async (e) => {
       const index = parseInt(e.target.dataset.index);
-      if (index === 0) return;
       const docRef = doc(db, "events", currentEvent);
       const docSnap = await getDoc(docRef);
-      if (!docSnap.exists()) return;
       const data = docSnap.data();
       const steps = data.steps || [];
       [steps[index - 1], steps[index]] = [steps[index], steps[index - 1]];
@@ -227,10 +219,8 @@ async function resizeImageWithDialog(file) {
       const index = parseInt(e.target.dataset.index);
       const docRef = doc(db, "events", currentEvent);
       const docSnap = await getDoc(docRef);
-      if (!docSnap.exists()) return;
       const data = docSnap.data();
       const steps = data.steps || [];
-      if (index >= steps.length - 1) return;
       [steps[index], steps[index + 1]] = [steps[index + 1], steps[index]];
       await updateDoc(docRef, { steps });
       loadSteps(currentEvent);
@@ -244,14 +234,12 @@ async function resizeImageWithDialog(file) {
       editIndex = index;
       const docRef = doc(db, "events", currentEvent);
       const docSnap = await getDoc(docRef);
-      if (!docSnap.exists()) return;
       const step = docSnap.data().steps[index];
       document.getElementById("redirect").value = step.redirect || "";
           document.getElementById("scrollA").checked = !!step.scrollA;
           document.getElementById("scrollB").checked = !!step.scrollB;
       const setSelectByUrl = (selectId, url) => {
         const select = document.getElementById(selectId);
-        if (!select) return;
         [...select.options].forEach(opt => {
           if (opt.value === url) select.value = url;
         });
@@ -267,10 +255,8 @@ async function resizeImageWithDialog(file) {
   document.querySelectorAll(".delete-step").forEach(btn => {
     btn.addEventListener("click", async (e) => {
       const index = parseInt(e.target.dataset.index);
-      if (!confirm("Supprimer cette étape ?")) return;
       const docRef = doc(db, "events", currentEvent);
       const docSnap = await getDoc(docRef);
-      if (!docSnap.exists()) return;
       const data = docSnap.data();
       const steps = data.steps || [];
       steps.splice(index, 1);
@@ -287,14 +273,12 @@ async function resizeImageWithDialog(file) {
           editIndex = index;
           const docRef = doc(db, "events", currentEvent);
           const docSnap = await getDoc(docRef);
-          if (!docSnap.exists()) return;
           const step = docSnap.data().steps[index];
           document.getElementById("redirect").value = step.redirect || "";
           document.getElementById("scrollA").checked = !!step.scrollA;
           document.getElementById("scrollB").checked = !!step.scrollB;
           const setSelectByUrl = (selectId, url) => {
             const select = document.getElementById(selectId);
-            if (!select) return;
             [...select.options].forEach(opt => {
               if (opt.value === url) select.value = url;
             });
@@ -362,7 +346,6 @@ window.saveLatenceRouge = async function () {
       const val = parseInt(document.getElementById("latenceMs").value, 10);
       if (!currentEvent || isNaN(val)) {
         alert("Veuillez sélectionner un projet et entrer une valeur valide.");
-        return;
       }
       const ref = doc(db, "events", currentEvent);
       await updateDoc(ref, { latenceMs: val });
