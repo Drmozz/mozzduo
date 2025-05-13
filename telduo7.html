@@ -355,7 +355,8 @@ onSnapshot(doc(db, "events", eventID), (snap) => {
     dot.style.background = data.dotColor1 || "rgba(0,0,255,0.3)";
 
     const latenceMs = data.latenceMs || 3000;
-    const latenceAvantRouge = latenceMs - 500;
+    const latenceRougeMs = data.latenceRougeMs || 500;
+    const latenceAvantRouge = latenceMs - latenceRougeMs;
 
     if (latenceAvantRouge > 0) {
       setTimeout(() => {
@@ -459,7 +460,8 @@ onSnapshot(doc(db, "events", eventID), (snap) => {
   dot.style.background = data.dotColor1 || "rgba(0,0,255,0.3)";
 
   const latenceMs = data.latenceMs || 3000;
-  const latenceAvantRouge = latenceMs - 500;
+  const latenceRougeMs = data.latenceRougeMs || 500;
+    const latenceAvantRouge = latenceMs - latenceRougeMs;
 
   if (latenceAvantRouge > 0) {
     setTimeout(() => {
