@@ -225,14 +225,14 @@ const urlSide = params.get("side");
 function isiOS() {
   return /iPhone|iPad|iPod/i.test(navigator.userAgent);
 }
-function initWithSide() {
+window.initWithSide = function () {
   document.getElementById("silentStart").remove();
   if (urlSide === "A" || urlSide === "B") {
     window.selectSide(urlSide);
   }
 }
 if (urlSide && !isiOS()) {
-  initWithSide(); // lance auto si pas iOS
+  window.initWithSide(); // lance auto si pas iOS
 }
 
 
