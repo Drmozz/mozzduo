@@ -70,7 +70,7 @@ exports.handler = async function (event, context) {
 
     await ref.update({
       trigger: key,
-      control: current + 1
+      nextControl: current + 1
     });
 
     return {
