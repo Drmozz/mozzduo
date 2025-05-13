@@ -173,7 +173,7 @@
 </div>
 <div id="step">
 <div id="corner">
-<div id="dot" style="display:none; position:absolute; top:10px; right:10px; width:5px; height:5px; background:rgba(0,0,255,0.3); border-radius:50%; z-index:20;"></div>
+<div id="dot" style="display:none; position:absolute; top:40px; right:10px; width:5px; height:5px; background:rgba(0,0,255,0.3); border-radius:50%; z-index:20;"></div>
 </div>
 <div id="imageBox">
 <img alt="étape" id="image" src="" style="display:none;"/>
@@ -231,9 +231,12 @@ window.initWithSide = function () {
     window.selectSide(urlSide);
   }
 }
-if (urlSide && !isiOS()) {
-  window.initWithSide(); // lance auto si pas iOS
-}
+document.addEventListener("DOMContentLoaded", () => {
+  if (urlSide && !isiOS()) {
+    window.initWithSide();
+  }
+});
+
 
 
     const initDiv = document.getElementById("init");
