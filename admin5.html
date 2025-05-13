@@ -337,38 +337,32 @@ async function resizeImageWithDialog(file) {
 
     
     window.saveLatence = async function () {
+  if (!currentEvent) {
+    alert("Veuillez sélectionner un projet avant de modifier la latence.");
+    return;
+  }
   const val = parseInt(document.getElementById("latenceMs").value, 10);
   if (!currentEvent || isNaN(val)) {
     alert("Veuillez sélectionner un projet et entrer une valeur valide.");
     return;
   }
-  const ref = doc(db, "events", currentEvent);
-  await updateDoc(ref, { latenceMs: val });
-  alert("Latence enregistrée !");
-}
-
 
 window.saveLatenceRouge = async function () {
+  if (!currentEvent) {
+    alert("Veuillez sélectionner un projet avant de modifier le délai rouge.");
+    return;
+  }
   const val = parseInt(document.getElementById("latenceRougeMs").value, 10);
   if (!currentEvent || isNaN(val)) {
     alert("Veuillez sélectionner un projet et entrer une valeur valide.");
     return;
   }
-  const ref = doc(db, "events", currentEvent);
-  await updateDoc(ref, { latenceRougeMs: val });
-  alert("Délai avant passage au rouge enregistré !");
-}
-
 
 
       const val = parseInt(document.getElementById("latenceMs").value, 10);
       if (!currentEvent || isNaN(val)) {
         alert("Veuillez sélectionner un projet et entrer une valeur valide.");
       }
-      const ref = doc(db, "events", currentEvent);
-      await updateDoc(ref, { latenceMs: val });
-      alert("Latence enregistrée !");
-    
 
 
     document.addEventListener("DOMContentLoaded", async () => {
@@ -488,14 +482,6 @@ console.log('URLs uploadées :', { imgAUrl, imgBUrl, soundAUrl, soundBUrl });
       const color1 = document.getElementById("dotColor1").value;
       const color2 = document.getElementById("dotColor2").value;
       if (!currentEvent) return alert("Veuillez sélectionner un projet.");
-      const ref = doc(db, "events", currentEvent);
-      await updateDoc(ref, {
-        dotColor1: color1,
-        dotColor2: color2
-      });
-      alert("Couleurs enregistrées !");
-    }
-
 </script>
 </head>
 <body>
