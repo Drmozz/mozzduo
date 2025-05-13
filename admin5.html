@@ -346,8 +346,34 @@ async function resizeImageWithDialog(file) {
     alert("Veuillez sélectionner un projet et entrer une valeur valide.");
     return;
   }
+  const ref = doc(db, "events", currentEvent);
+  await updateDoc(ref, { latenceMs: val });
+  alert("Latence enregistrée !");
+}
+  if (!currentEvent) {
+    alert("Veuillez sélectionner un projet avant de modifier la latence.");
+    return;
+  }
+  const val = parseInt(document.getElementById("latenceMs").value, 10);
+  if (!currentEvent || isNaN(val)) {
+    alert("Veuillez sélectionner un projet et entrer une valeur valide.");
+    return;
+  }
 
 window.saveLatenceRouge = async function () {
+  if (!currentEvent) {
+    alert("Veuillez sélectionner un projet avant de modifier le délai rouge.");
+    return;
+  }
+  const val = parseInt(document.getElementById("latenceRougeMs").value, 10);
+  if (!currentEvent || isNaN(val)) {
+    alert("Veuillez sélectionner un projet et entrer une valeur valide.");
+    return;
+  }
+  const ref = doc(db, "events", currentEvent);
+  await updateDoc(ref, { latenceRougeMs: val });
+  alert("Délai rouge enregistré !");
+}
   if (!currentEvent) {
     alert("Veuillez sélectionner un projet avant de modifier le délai rouge.");
     return;
