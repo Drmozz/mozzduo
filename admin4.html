@@ -368,7 +368,7 @@ window.saveLatenceRouge = async function () {
       const ref = doc(db, "events", currentEvent);
       await updateDoc(ref, { latenceMs: val });
       alert("Latence enregistrée !");
-    }
+    
 
 
     document.addEventListener("DOMContentLoaded", async () => {
