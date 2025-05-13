@@ -184,7 +184,19 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getFirestore, doc, getDoc, getDocs, collection, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import {
+  getFirestore,
+  initializeFirestore,
+  persistentLocalCache,
+  persistentMultipleTabManager,
+  doc,
+  getDoc,
+  getDocs,
+  collection,
+  onSnapshot,
+  updateDoc
+} from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
 
     const firebaseConfig = {
       apiKey: "AIzaSyAO0LdsUQ05XRz3wLyTI6VD4r73qHKd1lU",
@@ -196,7 +208,11 @@
     };
 
     const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+    const db = initializeFirestore(app, {
+  localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
+  experimentalForceLongPolling: true // 🔧 clé anti-QUIC
+});
+
 
     let side = null;
 let preloadedImages = [];
@@ -315,7 +331,7 @@ await updateDoc(doc(db, "events", eventID), { trigger: "0" });
 
       onSnapshot(docRef, (docSnap) => {
         const data = docSnap.data();
-        if (typeof data.control === "number" && data.control !== currentIndex) {
+        if (typeof data.control === "number" && data.control > currentIndex) {
           showStep(data.control);
         }
         
@@ -423,26 +439,31 @@ onSnapshot(doc(db, "events", eventID), (snap) => {
     
     
     corner.addEventListener("click", async () => {
-      const dot = document.getElementById("dot");
-      dot.style.display = "block";
-      dot.style.background = data.dotColor1 || "rgba(0,0,255,0.3)";
+  const dot = document.getElementById("dot");
 
-      const docRef = doc(db, "events", eventID);
-      const snap = await getDoc(docRef);
-      const latenceMs = snap.data()?.latenceMs || 3000;
+  const docRef = doc(db, "events", eventID);
+  const snap = await getDoc(docRef);
+  const data = snap.data(); // ✅ récupération AVANT toute utilisation
 
-      const latenceAvantRouge = latenceMs - 500;
-      if (latenceAvantRouge > 0) {
-        setTimeout(() => {
-          dot.style.background = data.dotColor2 || "rgba(255,0,0,0.6)";
-        }, latenceAvantRouge);
-      }
+  dot.style.display = "block";
+  dot.style.background = data.dotColor1 || "rgba(0,0,255,0.3)";
 
-      setTimeout(async () => {
-        dot.style.display = "none";
-        await updateDoc(docRef, { control: currentIndex + 1 });
-      }, latenceMs);
-    });
+  const latenceMs = data.latenceMs || 3000;
+  const latenceAvantRouge = latenceMs - 500;
+
+  if (latenceAvantRouge > 0) {
+    setTimeout(() => {
+      dot.style.background = data.dotColor2 || "rgba(255,0,0,0.6)";
+    }, latenceAvantRouge);
+  }
+
+  setTimeout(async () => {
+    dot.style.display = "none";
+    await updateDoc(docRef, { control: currentIndex + 1 });
+  }, latenceMs);
+});
+
+
 
 
 
