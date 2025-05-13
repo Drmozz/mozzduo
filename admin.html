@@ -1,10 +1,11 @@
 <!DOCTYPE html>
+
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Admin Mozzduo</title>
-  <style>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Admin Mozzduo</title>
+<style>
     body {
       background: #111;
       color: #fff;
@@ -41,7 +42,7 @@
       background-color: darkorange;
     }
   </style>
-  <script type="module">
+<script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { getFirestore, doc, setDoc, serverTimestamp, getDocs, collection, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
     import { getStorage, ref as storageRef, uploadBytes, getDownloadURL, listAll } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
@@ -337,15 +338,35 @@ async function resizeImageWithDialog(file) {
 
     
     window.saveLatence = async function () {
-      const val = parseInt(document.getElementById("latenceMs").value, 10);
-      if (!currentEvent || isNaN(val)) {
-        alert("Veuillez sélectionner un projet et entrer une valeur valide.");
-        return;
-      }
-      const ref = doc(db, "events", currentEvent);
-      await updateDoc(ref, { latenceMs: val });
-      alert("Latence enregistrée !");
-    }
+window.saveSignal = async function () {
+  const val = parseInt(document.getElementById("signalMs").value, 10);
+  if (!currentEvent || isNaN(val)) {
+    alert("Veuillez sélectionner un projet et entrer une valeur valide.");
+    return;
+  }
+  const ref = doc(db, "events", currentEvent);
+  try {
+    await updateDoc(ref, { signalMs: val });
+    alert("Signal enregistré !");
+  } catch (e) {
+    console.error("Erreur lors de l'enregistrement du signal :", e);
+    alert("Erreur lors de l'enregistrement.");
+  }
+}
+  const val = parseInt(document.getElementById("latenceMs").value, 10);
+  if (!currentEvent || isNaN(val)) {
+    alert("Veuillez sélectionner un projet et entrer une valeur valide.");
+    return;
+  }
+  const ref = doc(db, "events", currentEvent);
+  try {
+    await updateDoc(ref, { latenceMs: val });
+    alert("Latence enregistrée !");
+  } catch (e) {
+    console.error("Erreur lors de l'enregistrement de la latence :", e);
+    alert("Erreur lors de l'enregistrement.");
+  }
+}
 
 
     document.addEventListener("DOMContentLoaded", async () => {
@@ -379,8 +400,14 @@ async function resizeImageWithDialog(file) {
 
         const docRef = doc(db, "events", currentEvent);
         const docSnap = await getDoc(docRef);
-        const val = docSnap.exists() ? docSnap.data().latenceMs : 3000;
-        document.getElementById("latenceMs").value = val !== undefined ? val : 3000;
+        const data = docSnap.data();
+const latence = typeof data.latenceMs === "number" ? data.latenceMs : 3000;
+document.getElementById("latenceMs").value = latence;
+const signal = typeof data.signalMs === "number" ? data.signalMs : 1000;
+document.getElementById("signalMs").value = signal;
+console.log("Signal chargé:", signal);
+console.log("Latence chargée:", latence);
+
         populateFileSelectors();
         loadSteps(currentEvent);
       });
@@ -455,52 +482,68 @@ console.log('URLs uploadées :', { imgAUrl, imgBUrl, soundAUrl, soundBUrl });
 
       loadEvents();
     });
-  </script>
+  
+    window.saveDotColors = async function () {
+      const color1 = document.getElementById("dotColor1").value;
+      const color2 = document.getElementById("dotColor2").value;
+      if (!currentEvent) return alert("Veuillez sélectionner un projet.");
+      const ref = doc(db, "events", currentEvent);
+      await updateDoc(ref, {
+        dotColor1: color1,
+        dotColor2: color2
+      });
+      alert("Couleurs enregistrées !");
+    }</script>
 </head>
 <body>
-  <h1>🎩 Admin Mozzduo</h1>
-  <div class="box">
-    <h2>🏗️ Création d'un projet</h2>
-    <form id="event-form">
-      <label for="event-id">Event ID :</label><br/><br/><br/>
-      <input type="text" id="event-id" placeholder="ex: MAGIE2025" required />
-      <button type="submit">+ Créer un nouveau projet</button>
-    </form>
+<h1>🎩 Admin Mozzduo</h1>
+<div class="box">
+<h2>🏗️ Création d'un projet</h2>
+<form id="event-form">
+<label for="event-id">Event ID :</label><br/><br/><br/>
+<input id="event-id" placeholder="ex: MAGIE2025" required="" type="text"/>
+<button type="submit">+ Créer un nouveau projet</button>
+</form>
+<h2>📂 Ou choisir un projet existant :</h2>
+<select id="event-select"></select>
+<label for="latenceMs">⏱️ Latence (ms avant changement) :</label>
+<input id="latenceMs" type="number" value="3000"/>
+<button onclick="saveLatence()">💾 Enregistrer la latence</button>
+<label for="signalMs">🔴 Signal avant déclenchement (ms) :</label>
+<input id="signalMs" type="number" value="1000"/>
+<button onclick="saveSignal()">💾 Enregistrer le signal</button>
 
-    <h2>📂 Ou choisir un projet existant :</h2>
-    <select id="event-select"></select>
-
-    <label for="latenceMs">⏱️ Latence (ms avant changement) :</label>
-    <input type="number" id="latenceMs" value="3000" />
-    <button onclick="saveLatence()">💾 Enregistrer la latence</button>
-
-
-    <div id="step-editor" style="margin-top: 30px; display:none;">
-      <h2>🧩 Ajouter une étape</h2>
-      <form id="step-form">
-        <label>Image téléphone A :</label><br/><br/><br/>
-        <select id="imgA-select"><option value="">-- Ou choisir un fichier existant --</option></select>
-        <input type="file" id="imgA" accept="image/*" />
-        <label style="display:inline-flex; align-items:center; gap:6px;">scroll <input type="checkbox" id="scrollA" /></label><br/><br/><br/>
-        <label>Image téléphone B :</label><br/><br/><br/>
-        <select id="imgB-select"><option value="">-- Ou choisir un fichier existant --</option></select>
-        <input type="file" id="imgB" accept="image/*" />
-        <label style="display:inline-flex; align-items:center; gap:6px;">scroll <input type="checkbox" id="scrollB" /></label><br/><br/><br/>
-        <label>Son téléphone A :</label><br/><br/><br/>
-        <select id="soundA-select"><option value="">-- Ou choisir un fichier existant --</option></select>
-        <input type="file" id="soundA" accept="audio/*" />
-        <label>Son téléphone B :</label><br/><br/><br/>
-        <select id="soundB-select"><option value="">-- Ou choisir un fichier existant --</option></select>
-        <input type="file" id="soundB" accept="audio/*" />
-        <label>URL de redirection (optionnelle) :</label><br/><br/><br/>
-        <input type="url" id="redirect" placeholder="https://..." />
-        <button type="submit">Ajouter l'étape</button>
-      </form>
-      <div id="step-list" style="margin-top: 30px;">
-        <h2>🗂️ Étapes existantes :</h2>
-        <div id="steps-container"></div>
-      </div>
-    </div>
-  </div>
+<label for="dotColor1">🎨 Couleur 1 (à la réception du trigger) :</label>
+<input id="dotColor1" type="color" value="#0000ff"/>
+<label for="dotColor2">🎨 Couleur 2 (juste avant déclenchement) :</label>
+<input id="dotColor2" type="color" value="#ff0000"/>
+<button onclick="saveDotColors()">💾 Enregistrer les couleurs du point</button>
+<div id="step-editor" style="margin-top: 30px; display:none;">
+<h2>🧩 Ajouter une étape</h2>
+<form id="step-form">
+<label>Image téléphone A :</label><br/><br/><br/>
+<select id="imgA-select"><option value="">-- Ou choisir un fichier existant --</option></select>
+<input accept="image/*" id="imgA" type="file"/>
+<label style="display:inline-flex; align-items:center; gap:6px;">scroll <input id="scrollA" type="checkbox"/></label><br/><br/><br/>
+<label>Image téléphone B :</label><br/><br/><br/>
+<select id="imgB-select"><option value="">-- Ou choisir un fichier existant --</option></select>
+<input accept="image/*" id="imgB" type="file"/>
+<label style="display:inline-flex; align-items:center; gap:6px;">scroll <input id="scrollB" type="checkbox"/></label><br/><br/><br/>
+<label>Son téléphone A :</label><br/><br/><br/>
+<select id="soundA-select"><option value="">-- Ou choisir un fichier existant --</option></select>
+<input accept="audio/*" id="soundA" type="file"/>
+<label>Son téléphone B :</label><br/><br/><br/>
+<select id="soundB-select"><option value="">-- Ou choisir un fichier existant --</option></select>
+<input accept="audio/*" id="soundB" type="file"/>
+<label>URL de redirection (optionnelle) :</label><br/><br/><br/>
+<input id="redirect" placeholder="https://..." type="url"/>
+<button type="submit">Ajouter l'étape</button>
+</form>
+<div id="step-list" style="margin-top: 30px;">
+<h2>🗂️ Étapes existantes :</h2>
+<div id="steps-container"></div>
+</div>
+</div>
+</div>
 </body>
 </html>
