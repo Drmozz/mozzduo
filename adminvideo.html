@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="fr">
 <head>
 <meta charset="utf-8"/>
@@ -40,16 +41,26 @@
     button:hover {
       background-color: darkorange;
     }
-    .loop-div {
-      margin-bottom: 10px;
-      margin-top: -10px;
-      display: none;
-    }
-</style>
+  </style>
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { getFirestore, doc, setDoc, serverTimestamp, getDocs, collection, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
     import { getStorage, ref as storageRef, uploadBytes, getDownloadURL, listAll } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
+
+
+window.checkLoopBox = function(side) {
+  const input = document.getElementById(side === 'A' ? 'imgA' : 'imgB');
+  const loopDiv = document.getElementById(side === 'A' ? 'loopA-div' : 'loopB-div');
+  const file = input.files[0];
+  if (file && file.type.startsWith("video/")) {
+    loopDiv.style.display = "block";
+  } else {
+    loopDiv.style.display = "none";
+    document.getElementById(side === 'A' ? 'loopA' : 'loopB').checked = false;
+  }
+};
+
+
 
     const firebaseConfig = {
       apiKey: "AIzaSyAO0LdsUQ05XRz3wLyTI6VD4r73qHKd1lU",
@@ -65,24 +76,11 @@
     const storage = getStorage(app);
 
     let currentEvent = null;
-    let editIndex = null;
-
-    // Affiche ou cache la case "loop" selon le type de fichier sélectionné
-    window.checkLoopBox = function(side) {
-      const input = document.getElementById(side === 'A' ? 'imgA' : 'imgB');
-      const loopDiv = document.getElementById(side === 'A' ? 'loopA-div' : 'loopB-div');
-      const file = input.files[0];
-      if (file && file.type.startsWith("video/")) {
-        loopDiv.style.display = "block";
-      } else {
-        loopDiv.style.display = "none";
-        document.getElementById(side === 'A' ? 'loopA' : 'loopB').checked = false;
-      }
-    };
 
 async function resizeImageWithDialog(file) {
   const maxSizeKB = parseInt(prompt("Taille max de l’image en Ko (ex: 200 pour 200 Ko)", "200"));
   if (!maxSizeKB || isNaN(maxSizeKB)) return file;
+
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = e => {
@@ -90,13 +88,17 @@ async function resizeImageWithDialog(file) {
       img.onload = () => {
         const canvas = document.createElement("canvas");
         const ctx = canvas.getContext("2d");
+
         let width = img.width;
         let height = img.height;
+
         canvas.width = width;
         canvas.height = height;
         ctx.drawImage(img, 0, 0, width, height);
+
         const targetSize = maxSizeKB * 1024;
         let quality = 0.92;
+
         function attemptCompress() {
           canvas.toBlob(blob => {
             if (blob.size <= targetSize || quality <= 0.1) {
@@ -107,6 +109,7 @@ async function resizeImageWithDialog(file) {
             }
           }, file.type, quality);
         }
+
         attemptCompress();
       };
       img.onerror = () => reject("Erreur de chargement de l’image.");
@@ -116,6 +119,8 @@ async function resizeImageWithDialog(file) {
     reader.readAsDataURL(file);
   });
 }
+
+    let editIndex = null;
 
     async function loadEvents() {
       const eventList = document.getElementById("event-select");
@@ -146,34 +151,196 @@ async function resizeImageWithDialog(file) {
         container.innerHTML = "<p>Aucune étape enregistrée pour ce projet.</p>";
         return;
       }
-      steps.forEach((step, index) => {
-        const div = document.createElement("div");
-        div.style.border = "1px solid #444";
-        div.style.marginBottom = "20px";
-        div.style.padding = "10px";
-        div.style.borderRadius = "6px";
-        div.innerHTML = `
-          <h4>Étape ${index + 1}</h4>
-          <div style="display: flex; gap: 20px;">
-            <div>
-              ${step.imgA ? (step.imgA.match(/\.(mp4|mov|webm)$/i) ? `<video src="${step.imgA}" style="max-width:120px;" controls loop=${step.loopA?"true":"false"}></video>` : `<img src="${step.imgA}" alt="imgA" style="max-width: 120px;" />`) : "<p>Image/vidéo A manquante</p>"}
-              <p>Loop A : ${step.loopA ? "Oui" : "Non"}<br>Son A : ${step.soundA ? step.soundA.match(/[^\/]*$/)[0] : "—"}<br/>Mode A : ${step.scrollA ? "scroll" : "fit"}</p>
-            </div>
-            <div>
-              ${step.imgB ? (step.imgB.match(/\.(mp4|mov|webm)$/i) ? `<video src="${step.imgB}" style="max-width:120px;" controls loop=${step.loopB?"true":"false"}></video>` : `<img src="${step.imgB}" alt="imgB" style="max-width: 120px;" />`) : "<p>Image/vidéo B manquante</p>"}
-              <p>Loop B : ${step.loopB ? "Oui" : "Non"}<br>Son B : ${step.soundB ? step.soundB.match(/[^\/]*$/)[0] : "—"}<br/>Mode B : ${step.scrollB ? "scroll" : "fit"}</p>
-            </div>
-          </div>
-          ${step.redirect ? `<p>🔗 Redirection : <a href="${step.redirect}" target="_blank">${step.redirect}</a></p>` : ""}
-          <button class="edit-step" data-index="${index}">✏️ Modifier</button>
-          <button class="delete-step" data-index="${index}" style="background-color: crimson; margin-top: 10px;">🗑 Supprimer</button>
-          ${index > 0 ? `<button class="move-up" data-index="${index}" style="margin-top: 5px;">⬆️ Monter</button>` : ""}
-          ${index < steps.length - 1 ? `<button class="move-down" data-index="${index}" style="margin-left: 5px;">⬇️ Descendre</button>` : ""}
-        `;
-        container.appendChild(div);
-      });
+      
+  
+  steps.forEach((step, index) => {
+    const div = document.createElement("div");
+    div.style.border = "1px solid #444";
+    div.style.marginBottom = "20px";
+    div.style.padding = "10px";
+    div.style.borderRadius = "6px";
 
-      // Listeners pour édition/suppression/déplacement
+    div.innerHTML = `
+      <h4>Étape ${index + 1}</h4>
+      <div style="display: flex; gap: 20px;">
+        <div>
+         ${step.imgA 
+  ? (step.imgA.match(/\.(mp4|mov|webm)$/i) 
+      ? `<video src="${step.imgA}" style="max-width:120px;" controls ${step.loopA ? "loop" : ""}></video><br>Loop: ${step.loopA ? "Oui" : "Non"}`
+      : `<img src="${step.imgA}" alt="imgA" style="max-width: 120px;" />`)
+  : "<p>Image/vidéo A manquante</p>"
+}
+<p>Son A : ${step.soundA ? step.soundA.match(/[^\/]*$/)[0] : "—"}<br/>Mode A : ${step.scrollA ? "scroll" : "fit"}</p>
+
+        </div>
+        <div>
+         ${step.imgB 
+  ? (step.imgB.match(/\.(mp4|mov|webm)$/i) 
+      ? `<video src="${step.imgB}" style="max-width:120px;" controls ${step.loopB ? "loop" : ""}></video><br>Loop: ${step.loopB ? "Oui" : "Non"}`
+      : `<img src="${step.imgB}" alt="imgB" style="max-width: 120px;" />`)
+  : "<p>Image/vidéo B manquante</p>"
+}
+<p>Son B : ${step.soundB ? step.soundB.match(/[^\/]*$/)[0] : "—"}<br/>Mode B : ${step.scrollB ? "scroll" : "fit"}</p>
+
+        </div>
+      </div>
+      ${step.redirect ? `<p>🔗 Redirection : <a href="${step.redirect}" target="_blank">${step.redirect}</a></p>` : ""}
+      <button class="edit-step" data-index="${index}">✏️ Modifier</button>
+      <button class="delete-step" data-index="${index}" style="background-color: crimson; margin-top: 10px;">🗑 Supprimer</button>
+      ${index > 0 ? `<button class="move-up" data-index="${index}" style="margin-top: 5px;">⬆️ Monter</button>` : ""}
+      ${index < steps.length - 1 ? `<button class="move-down" data-index="${index}" style="margin-left: 5px;">⬇️ Descendre</button>` : ""}
+    `;
+    container.appendChild(div);
+  });
+
+  document.querySelectorAll(".edit-step").forEach(btn => {
+    btn.addEventListener("click", async (e) => {
+      const index = parseInt(e.target.dataset.index);
+      editIndex = index;
+      const docRef = doc(db, "events", currentEvent);
+      const docSnap = await getDoc(docRef);
+      if (!docSnap.exists()) return;
+      const step = docSnap.data().steps[index];
+      document.getElementById("redirect").value = step.redirect || "";
+          document.getElementById("scrollA").checked = !!step.scrollA;
+          document.getElementById("scrollB").checked = !!step.scrollB;
+      const setSelectByUrl = (selectId, url) => {
+        const select = document.getElementById(selectId);
+        if (!select) return;
+        [...select.options].forEach(opt => {
+          if (opt.value === url) select.value = url;
+        });
+      };
+      setSelectByUrl("imgA-select", step.imgA);
+      setSelectByUrl("imgB-select", step.imgB);
+      setSelectByUrl("soundA-select", step.soundA);
+      setSelectByUrl("soundB-select", step.soundB);
+      // Affiche la case loop si c'est une vidéo déjà enregistrée dans l'étape (édition)
+if (step.imgA && step.imgA.match(/\.(mp4|mov|webm)$/i)) {
+  document.getElementById("loopA-div").style.display = "block";
+  document.getElementById("loopA").checked = !!step.loopA;
+} else {
+  document.getElementById("loopA-div").style.display = "none";
+  document.getElementById("loopA").checked = false;
+}
+if (step.imgB && step.imgB.match(/\.(mp4|mov|webm)$/i)) {
+  document.getElementById("loopB-div").style.display = "block";
+  document.getElementById("loopB").checked = !!step.loopB;
+} else {
+  document.getElementById("loopB-div").style.display = "none";
+  document.getElementById("loopB").checked = false;
+}
+
+      window.scrollTo(0, document.getElementById("step-form").offsetTop);
+    });
+  });
+
+  document.querySelectorAll(".delete-step").forEach(btn => {
+    btn.addEventListener("click", async (e) => {
+      const index = parseInt(e.target.dataset.index);
+      if (!confirm("Supprimer cette étape ?")) return;
+      const docRef = doc(db, "events", currentEvent);
+      const docSnap = await getDoc(docRef);
+      if (!docSnap.exists()) return;
+      const data = docSnap.data();
+      const steps = data.steps || [];
+      steps.splice(index, 1);
+      await updateDoc(docRef, { steps });
+      alert("Étape supprimée.");
+      loadSteps(currentEvent);
+    });
+  });
+
+  document.querySelectorAll(".move-up").forEach(btn => {
+    btn.addEventListener("click", async (e) => {
+      const index = parseInt(e.target.dataset.index);
+      if (index === 0) return;
+      const docRef = doc(db, "events", currentEvent);
+      const docSnap = await getDoc(docRef);
+      if (!docSnap.exists()) return;
+      const data = docSnap.data();
+      const steps = data.steps || [];
+      [steps[index - 1], steps[index]] = [steps[index], steps[index - 1]];
+      await updateDoc(docRef, { steps });
+      loadSteps(currentEvent);
+    });
+  });
+
+  document.querySelectorAll(".move-down").forEach(btn => {
+    btn.addEventListener("click", async (e) => {
+      const index = parseInt(e.target.dataset.index);
+      const docRef = doc(db, "events", currentEvent);
+      const docSnap = await getDoc(docRef);
+      if (!docSnap.exists()) return;
+      const data = docSnap.data();
+      const steps = data.steps || [];
+      if (index >= steps.length - 1) return;
+      [steps[index], steps[index + 1]] = [steps[index + 1], steps[index]];
+      await updateDoc(docRef, { steps });
+      loadSteps(currentEvent);
+    });
+  });
+
+
+  document.querySelectorAll(".edit-step").forEach(btn => {
+    btn.addEventListener("click", async (e) => {
+      const index = parseInt(e.target.dataset.index);
+      editIndex = index;
+      const docRef = doc(db, "events", currentEvent);
+      const docSnap = await getDoc(docRef);
+      if (!docSnap.exists()) return;
+      const step = docSnap.data().steps[index];
+      document.getElementById("redirect").value = step.redirect || "";
+          document.getElementById("scrollA").checked = !!step.scrollA;
+          document.getElementById("scrollB").checked = !!step.scrollB;
+      const setSelectByUrl = (selectId, url) => {
+        const select = document.getElementById(selectId);
+        if (!select) return;
+        [...select.options].forEach(opt => {
+          if (opt.value === url) select.value = url;
+        });
+      };
+      setSelectByUrl("imgA-select", step.imgA);
+      setSelectByUrl("imgB-select", step.imgB);
+      setSelectByUrl("soundA-select", step.soundA);
+      setSelectByUrl("soundB-select", step.soundB);
+      // Affiche la case loop si c'est une vidéo déjà enregistrée dans l'étape (édition)
+if (step.imgA && step.imgA.match(/\.(mp4|mov|webm)$/i)) {
+  document.getElementById("loopA-div").style.display = "block";
+  document.getElementById("loopA").checked = !!step.loopA;
+} else {
+  document.getElementById("loopA-div").style.display = "none";
+  document.getElementById("loopA").checked = false;
+}
+if (step.imgB && step.imgB.match(/\.(mp4|mov|webm)$/i)) {
+  document.getElementById("loopB-div").style.display = "block";
+  document.getElementById("loopB").checked = !!step.loopB;
+} else {
+  document.getElementById("loopB-div").style.display = "none";
+  document.getElementById("loopB").checked = false;
+}
+
+      window.scrollTo(0, document.getElementById("step-form").offsetTop);
+    });
+  });
+
+  document.querySelectorAll(".delete-step").forEach(btn => {
+    btn.addEventListener("click", async (e) => {
+      const index = parseInt(e.target.dataset.index);
+      if (!confirm("Supprimer cette étape ?")) return;
+      const docRef = doc(db, "events", currentEvent);
+      const docSnap = await getDoc(docRef);
+      if (!docSnap.exists()) return;
+      const data = docSnap.data();
+      const steps = data.steps || [];
+      steps.splice(index, 1);
+      await updateDoc(docRef, { steps });
+      alert("Étape supprimée.");
+      loadSteps(currentEvent);
+    });
+  });
+
+
       document.querySelectorAll(".edit-step").forEach(btn => {
         btn.addEventListener("click", async (e) => {
           const index = parseInt(e.target.dataset.index);
@@ -185,8 +352,6 @@ async function resizeImageWithDialog(file) {
           document.getElementById("redirect").value = step.redirect || "";
           document.getElementById("scrollA").checked = !!step.scrollA;
           document.getElementById("scrollB").checked = !!step.scrollB;
-
-          // Sélection dans les listes déroulantes
           const setSelectByUrl = (selectId, url) => {
             const select = document.getElementById(selectId);
             if (!select) return;
@@ -198,69 +363,23 @@ async function resizeImageWithDialog(file) {
           setSelectByUrl("imgB-select", step.imgB);
           setSelectByUrl("soundA-select", step.soundA);
           setSelectByUrl("soundB-select", step.soundB);
+          // Affiche la case loop si c'est une vidéo déjà enregistrée dans l'étape (édition)
+if (step.imgA && step.imgA.match(/\.(mp4|mov|webm)$/i)) {
+  document.getElementById("loopA-div").style.display = "block";
+  document.getElementById("loopA").checked = !!step.loopA;
+} else {
+  document.getElementById("loopA-div").style.display = "none";
+  document.getElementById("loopA").checked = false;
+}
+if (step.imgB && step.imgB.match(/\.(mp4|mov|webm)$/i)) {
+  document.getElementById("loopB-div").style.display = "block";
+  document.getElementById("loopB").checked = !!step.loopB;
+} else {
+  document.getElementById("loopB-div").style.display = "none";
+  document.getElementById("loopB").checked = false;
+}
 
-          // Gestion de la case loop en édition
-          if (step.imgA && step.imgA.match(/\.(mp4|mov|webm)$/i)) {
-            document.getElementById("loopA-div").style.display = "block";
-            document.getElementById("loopA").checked = !!step.loopA;
-          } else {
-            document.getElementById("loopA-div").style.display = "none";
-            document.getElementById("loopA").checked = false;
-          }
-          if (step.imgB && step.imgB.match(/\.(mp4|mov|webm)$/i)) {
-            document.getElementById("loopB-div").style.display = "block";
-            document.getElementById("loopB").checked = !!step.loopB;
-          } else {
-            document.getElementById("loopB-div").style.display = "none";
-            document.getElementById("loopB").checked = false;
-          }
           window.scrollTo(0, document.getElementById("step-form").offsetTop);
-        });
-      });
-
-      document.querySelectorAll(".delete-step").forEach(btn => {
-        btn.addEventListener("click", async (e) => {
-          const index = parseInt(e.target.dataset.index);
-          if (!confirm("Supprimer cette étape ?")) return;
-          const docRef = doc(db, "events", currentEvent);
-          const docSnap = await getDoc(docRef);
-          if (!docSnap.exists()) return;
-          const data = docSnap.data();
-          const steps = data.steps || [];
-          steps.splice(index, 1);
-          await updateDoc(docRef, { steps });
-          alert("Étape supprimée.");
-          loadSteps(currentEvent);
-        });
-      });
-
-      document.querySelectorAll(".move-up").forEach(btn => {
-        btn.addEventListener("click", async (e) => {
-          const index = parseInt(e.target.dataset.index);
-          if (index === 0) return;
-          const docRef = doc(db, "events", currentEvent);
-          const docSnap = await getDoc(docRef);
-          if (!docSnap.exists()) return;
-          const data = docSnap.data();
-          const steps = data.steps || [];
-          [steps[index - 1], steps[index]] = [steps[index], steps[index - 1]];
-          await updateDoc(docRef, { steps });
-          loadSteps(currentEvent);
-        });
-      });
-
-      document.querySelectorAll(".move-down").forEach(btn => {
-        btn.addEventListener("click", async (e) => {
-          const index = parseInt(e.target.dataset.index);
-          const docRef = doc(db, "events", currentEvent);
-          const docSnap = await getDoc(docRef);
-          if (!docSnap.exists()) return;
-          const data = docSnap.data();
-          const steps = data.steps || [];
-          if (index >= steps.length - 1) return;
-          [steps[index], steps[index + 1]] = [steps[index + 1], steps[index]];
-          await updateDoc(docRef, { steps });
-          loadSteps(currentEvent);
         });
       });
     }
@@ -292,32 +411,38 @@ async function resizeImageWithDialog(file) {
       }
     }
 
+    
     window.saveLatence = async function () {
-      const val = parseInt(document.getElementById("latenceMs").value, 10);
-      if (!currentEvent || isNaN(val)) {
-        alert("Veuillez sélectionner un projet et entrer une valeur valide.");
-        return;
-      }
-      const ref = doc(db, "events", currentEvent);
-      await updateDoc(ref, { latenceMs: val });
-      alert("Latence enregistrée !");
-    }
+window.saveSignal = async function () {
+  const val = parseInt(document.getElementById("signalMs").value, 10);
+  if (!currentEvent || isNaN(val)) {
+    alert("Veuillez sélectionner un projet et entrer une valeur valide.");
+    return;
+  }
+  const ref = doc(db, "events", currentEvent);
+  try {
+    await updateDoc(ref, { signalMs: val });
+    alert("Signal enregistré !");
+  } catch (e) {
+    console.error("Erreur lors de l'enregistrement du signal :", e);
+    alert("Erreur lors de l'enregistrement.");
+  }
+}
+  const val = parseInt(document.getElementById("latenceMs").value, 10);
+  if (!currentEvent || isNaN(val)) {
+    alert("Veuillez sélectionner un projet et entrer une valeur valide.");
+    return;
+  }
+  const ref = doc(db, "events", currentEvent);
+  try {
+    await updateDoc(ref, { latenceMs: val });
+    alert("Latence enregistrée !");
+  } catch (e) {
+    console.error("Erreur lors de l'enregistrement de la latence :", e);
+    alert("Erreur lors de l'enregistrement.");
+  }
+}
 
-    window.saveSignal = async function () {
-      const val = parseInt(document.getElementById("signalMs").value, 10);
-      if (!currentEvent || isNaN(val)) {
-        alert("Veuillez sélectionner un projet et entrer une valeur valide.");
-        return;
-      }
-      const ref = doc(db, "events", currentEvent);
-      try {
-        await updateDoc(ref, { signalMs: val });
-        alert("Signal enregistré !");
-      } catch (e) {
-        console.error("Erreur lors de l'enregistrement du signal :", e);
-        alert("Erreur lors de l'enregistrement.");
-      }
-    }
 
     document.addEventListener("DOMContentLoaded", async () => {
       const form = document.getElementById("event-form");
@@ -347,13 +472,17 @@ async function resizeImageWithDialog(file) {
       eventList.addEventListener("change", async (e) => {
         currentEvent = e.target.value;
         stepEditor.style.display = "block";
+
         const docRef = doc(db, "events", currentEvent);
         const docSnap = await getDoc(docRef);
         const data = docSnap.data();
-        const latence = typeof data.latenceMs === "number" ? data.latenceMs : 3000;
-        document.getElementById("latenceMs").value = latence;
-        const signal = typeof data.signalMs === "number" ? data.signalMs : 1000;
-        document.getElementById("signalMs").value = signal;
+const latence = typeof data.latenceMs === "number" ? data.latenceMs : 3000;
+document.getElementById("latenceMs").value = latence;
+const signal = typeof data.signalMs === "number" ? data.signalMs : 1000;
+document.getElementById("signalMs").value = signal;
+console.log("Signal chargé:", signal);
+console.log("Latence chargée:", latence);
+
         populateFileSelectors();
         loadSteps(currentEvent);
       });
@@ -368,25 +497,145 @@ async function resizeImageWithDialog(file) {
         const redirect = document.getElementById("redirect").value;
         const scrollA = document.getElementById("scrollA").checked;
         const scrollB = document.getElementById("scrollB").checked;
-        const loopA = document.getElementById("loopA").checked;
-        const loopB = document.getElementById("loopB").checked;
         const imgA_select = document.getElementById("imgA-select").value;
         const imgB_select = document.getElementById("imgB-select").value;
         const soundA_select = document.getElementById("soundA-select").value;
         const soundB_select = document.getElementById("soundB-select").value;
         const storageBase = `events/${currentEvent}/`;
 
-        const uploadOrUseExisting = async (file, existingUrl) => {
-          if (existingUrl) return existingUrl;
-          if (!file) return null;
-          const path = storageBase + Date.now() + "_" + file.name;
-          const ref = storageRef(storage, path);
-          const toUpload = file.type.startsWith("image/")
-            ? await resizeImageWithDialog(file)
-            : file;
-          await uploadBytes(ref, toUpload);
-          return getDownloadURL(ref);
-        };
+        
+const uploadOrUseExisting = async (file, existingUrl) => {
+  if (existingUrl) return existingUrl;
+  if (!file) return null;
+  const path = storageBase + Date.now() + "_" + file.name;
+  const ref = storageRef(storage, path);
+  const toUpload = file.type.startsWith("image/")
+    ? await resizeImageWithDialog(file)
+    : file;
+  await uploadBytes(ref, toUpload);
+  return getDownloadURL(ref);
+};
+
 
         try {
-          const [imgAUrl, imgBUrl
+          const [imgAUrl, imgBUrl, soundAUrl, soundBUrl] = await Promise.all([
+            uploadOrUseExisting(imgA, imgA_select),
+            uploadOrUseExisting(imgB, imgB_select),
+            uploadOrUseExisting(soundA, soundA_select),
+            uploadOrUseExisting(soundB, soundB_select)
+          ]);
+console.log('URLs uploadées :', { imgAUrl, imgBUrl, soundAUrl, soundBUrl });
+          const docRef = doc(db, "events", currentEvent);
+          const docSnap = await getDoc(docRef);
+          const data = docSnap.exists() ? docSnap.data() : { steps: [] };
+          const steps = data.steps || [];
+          const newStep = {
+            imgA: imgAUrl,
+            imgB: imgBUrl,
+            soundA: soundAUrl,
+            soundB: soundBUrl,
+            redirect: redirect || "",
+            scrollA,
+            scrollB,
+            loopA: document.getElementById("loopA").checked,
+            loopB: document.getElementById("loopB").checked,
+
+          };
+          if (editIndex !== null) {
+            steps[editIndex] = newStep;
+            editIndex = null;
+            alert("Étape modifiée avec succès !");
+          } else {
+            steps.push(newStep);
+            alert("Étape ajoutée avec succès !");
+          }
+          await updateDoc(docRef, { steps });
+          stepForm.reset();
+          loadSteps(currentEvent);
+        } catch (err) {
+          console.error("Erreur lors de la soumission :", err);
+          alert("Erreur lors de la soumission.");
+        }
+      });
+
+      loadEvents();
+    });
+  
+    window.saveDotColors = async function () {
+      const color1 = document.getElementById("dotColor1").value;
+      const color2 = document.getElementById("dotColor2").value;
+      if (!currentEvent) return alert("Veuillez sélectionner un projet.");
+      const ref = doc(db, "events", currentEvent);
+      await updateDoc(ref, {
+        dotColor1: color1,
+        dotColor2: color2
+      });
+      alert("Couleurs enregistrées !");
+    }</script>
+</head>
+<body>
+<h1>🎩 Admin Mozzduo</h1>
+<div class="box">
+<h2>🏗️ Création d'un projet</h2>
+<form id="event-form">
+<label for="event-id">Event ID :</label><br/><br/><br/>
+<input id="event-id" placeholder="ex: MAGIE2025" required="" type="text"/>
+<button type="submit">+ Créer un nouveau projet</button>
+</form>
+<h2>📂 Ou choisir un projet existant :</h2>
+<select id="event-select"></select>
+<label for="latenceMs">⏱️ Latence (ms avant changement) :</label>
+<input id="latenceMs" type="number" value="3000"/>
+<button onclick="saveLatence()">💾 Enregistrer la latence</button>
+<label for="signalMs">🔴 Signal avant déclenchement (ms) :</label>
+<input id="signalMs" type="number" value="1000"/>
+<button onclick="saveSignal()">💾 Enregistrer le signal</button>
+
+<label for="dotColor1">🎨 Couleur 1 (à la réception du trigger) :</label>
+<input id="dotColor1" type="color" value="#0000ff"/>
+<label for="dotColor2">🎨 Couleur 2 (juste avant déclenchement) :</label>
+<input id="dotColor2" type="color" value="#ff0000"/>
+<button onclick="saveDotColors()">💾 Enregistrer les couleurs du point</button>
+<div id="step-editor" style="margin-top: 30px; display:none;">
+<h2>🧩 Ajouter une étape</h2>
+<form id="step-form">
+<label>Image téléphone A :</label><br/><br/><br/>
+<select id="imgA-select"><option value="">-- Ou choisir un fichier existant --</option></select>
+<input accept="image/*,video/*" id="imgA" type="file" onchange="checkLoopBox('A')" />
+<label style="display:inline-flex; align-items:center; gap:6px;">scroll <input id="scrollA" type="checkbox"/></label>
+<div id="loopA-div" style="display:none; margin-top:-10px; margin-bottom:12px;">
+  <label style="display:inline-flex; align-items:center; gap:6px;">
+    <input type="checkbox" id="loopA" /> Lire en boucle cette vidéo
+  </label>
+</div>
+<br/><br/><br/>
+type="checkbox"/></label><br/><br/><br/>
+<label>Image téléphone B :</label><br/><br/><br/>
+<select id="imgB-select"><option value="">-- Ou choisir un fichier existant --</option></select>
+<input accept="image/*,video/*" id="imgB" type="file" onchange="checkLoopBox('B')" />
+<label style="display:inline-flex; align-items:center; gap:6px;">scroll <input id="scrollB" type="checkbox"/></label>
+<div id="loopB-div" style="display:none; margin-top:-10px; margin-bottom:12px;">
+  <label style="display:inline-flex; align-items:center; gap:6px;">
+    <input type="checkbox" id="loopB" /> Lire en boucle cette vidéo
+  </label>
+</div>
+<br/><br/><br/>
+type="checkbox"/></label><br/><br/><br/>
+<label>Son téléphone A :</label><br/><br/><br/>
+<select id="soundA-select"><option value="">-- Ou choisir un fichier existant --</option></select>
+<input accept="audio/*" id="soundA" type="file"/>
+<label>Son téléphone B :</label><br/><br/><br/>
+<select id="soundB-select"><option value="">-- Ou choisir un fichier existant --</option></select>
+<input accept="audio/*" id="soundB" type="file"/>
+<label>URL de redirection (optionnelle) :</label><br/><br/><br/>
+<input id="redirect" placeholder="https://..." type="url"/>
+<button type="submit">Ajouter l'étape</button>
+</form>
+<div id="step-list" style="margin-top: 30px;">
+<h2>🗂️ Étapes existantes :</h2>
+<div id="steps-container"></div>
+</div>
+</div>
+</div>
+</body>
+</html>
