@@ -394,26 +394,27 @@ onSnapshot(doc(db, "events", eventID), (snap) => {
       const video = document.getElementById("video");
 
       const mediaUrl = side === "A" ? step.imgA : step.imgB;
-      const isVideo = mediaUrl && /\.(mp4|mov|webm)$/i.test(mediaUrl);
+// On gère mp4, mov, webm (et insensible à la casse)
+const isVideo = mediaUrl && /\.(mp4|mov|webm)$/i.test(mediaUrl);
+const isScroll = side === "A" ? step.scrollA : step.scrollB;
 
-      const isScroll = side === "A" ? step.scrollA : step.scrollB;
-
-      if (isVideo) {
+if (isVideo) {
   img.style.display = "none";
   video.src = mediaUrl;
   video.style.display = "block";
   video.className = isScroll ? "scroll-mode" : "fit-mode";
-  
-  // 👉 Lecture en boucle ou non selon l’étape et le côté
+  // Lecture en boucle ou non selon le champ Firestore, par côté
   const loopActive = side === "A" ? !!step.loopA : !!step.loopB;
   video.loop = loopActive;
-
   video.load();
   video.play().catch(e => console.warn("Lecture vidéo échouée", e));
 } else {
-
+  video.style.display = "none";
+  if (preloadedImages[index]) img.src = preloadedImages[index].src;
+  else img.src = mediaUrl || "";
+  img.style.display = "block";
+  img.className = isScroll ? "scroll-mode" : "fit-mode";
 }
-
 
       document.body.style.overflow = isScroll ? "auto" : "hidden";
 
